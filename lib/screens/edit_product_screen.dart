@@ -40,7 +40,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
     if (_isInit) {
       final productId = ModalRoute.of(context).settings.arguments as String;
       if (productId != null) {
-        final product = Provider.of<Products>(context, listen: false).findById(productId);
+        final product = Provider.of<Products>(context, listen: true).findById(productId);
         _editedProduct = product;
         _initValues = {
           'title': _editedProduct.title,
@@ -53,7 +53,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
       }
     }
     _isInit == false;
-    //super.didChangeDependencies();
+    super.didChangeDependencies();
   }
 
   @override
@@ -86,16 +86,11 @@ class _EditProductScreenState extends State<EditProductScreen> {
     //saving the product in the productList
     if (_editedProduct.id != null) {
       //update
-      Provider.of<Products>(context, listen: false).updateProduct(_editedProduct.id, _editedProduct);
-      setState(() {
-        _isLoading = false;
-      });
-      Navigator.of(context).pop();
+      await Provider.of<Products>(context, listen: false).updateProduct(_editedProduct.id, _editedProduct);
     } else {
       // add product
       try {
-        await Provider.of<Products>(context, listen: false)
-            .addProduct(_editedProduct);
+        await Provider.of<Products>(context, listen: false).addProduct(_editedProduct);
       } catch (error) {
         await showDialog(
           context: context,
@@ -112,13 +107,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
             ],
           ),
         );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
-        Navigator.of(context).pop();
+        // } finally {
+        //   setState(() {
+        //     _isLoading = false;
+        //   });
+        //   Navigator.of(context).pop();
       }
     }
+    setState(() {
+      _isLoading = false;
+    });
+    Navigator.of(context).pop();
     // Navigator.of(context).pop();
   }
 
