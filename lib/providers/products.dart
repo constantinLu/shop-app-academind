@@ -54,7 +54,7 @@ class Products with ChangeNotifier {
         'https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/products.json'); //only for firebase
     try {
       final response = await http.get(url);
-      print(json.decode(response.body)); // map in another map;
+      //print(json.decode(response.body)); // map in another map;
       final extractedData = json.decode(response.body)
           as Map<String, dynamic>; // we have a map as id and dynamic (which is actually another map);
       final List<Product> loadedProducts = [];
@@ -67,7 +67,8 @@ class Products with ChangeNotifier {
             title: prodData['title'],
             description: prodData['description'],
             price: prodData['price'] as double,
-            imageUrl: prodData['imageUrl']);
+            imageUrl: prodData['imageUrl'],
+            isFavorite: prodData['isFavorite']);
         loadedProducts.add(product);
       });
       //_items.addAll(loadedProducts);
@@ -100,7 +101,7 @@ class Products with ChangeNotifier {
           imageUrl: product.imageUrl));
       notifyListeners();
     } catch (error) {
-      print(error);
+      //print(error);
       throw error;
     }
   }
@@ -162,6 +163,40 @@ class Products with ChangeNotifier {
     return _items.firstWhere((prod) => prod.id == productId);
   }
 
+  // Future<void> updateFavoritesProduct(String productId, bool isFavorite) async {
+  //   //async automatically returns a future.
+  //   final existingProductsIndex = _items.indexWhere((prod) => prod.id == productId);
+  //   //async automatically returns a future.
+  //   final url = Uri.parse(
+  //       'https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/products/$productId.'); //only for firebase
+  //   var existingProduct = _items[existingProductsIndex];
+  //   _items[existingProductsIndex] = Product(
+  //       id: existingProduct.id,
+  //       title: existingProduct.title,
+  //       description: existingProduct.description,
+  //       price: existingProduct.price,
+  //       imageUrl: existingProduct.imageUrl,
+  //       isFavorite: isFavorite);
+  //   try {
+  //     if (existingProductsIndex >= 0) {
+  //       await http.patch(url,
+  //           body: json.encode({
+  //             'isFavorite': isFavorite,
+  //           }));
+  //
+  //       notifyListeners();
+  //     } else {
+  //       //throw error
+  //       _items[existingProductsIndex] = existingProduct;
+  //       AlertDialog(title: Text('Ops Something wrong happened!'));
+  //     }
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  //   existingProduct = null;
+  // }
+
+  @Deprecated('use optimistic delete')
   void deleteProduct(String productId) async {
     //async automatically returns a future.
     final url = Uri.parse(
@@ -175,7 +210,6 @@ class Products with ChangeNotifier {
     notifyListeners();
   }
 
-  @Deprecated('use optimistic delete')
   Future<void> deleteProductOptimistic(String productId) async {
     //async automatically returns a future.
     final url = Uri.parse(

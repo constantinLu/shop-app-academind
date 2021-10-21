@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 class ProductItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final productProvider = Provider.of<Product>(context);
+    final productProvider = Provider.of<Product>(context, listen: true);
     final cartProvider = Provider.of<Cart>(context, listen: false);
     return Consumer<Product>(
       //only when you want some part to be wrapped to the listener. //can be used only in isFavoriteButton
@@ -23,11 +23,11 @@ class ProductItem extends StatelessWidget {
           footer: GridTileBar(
             backgroundColor: Colors.black87,
             leading: IconButton(
-              icon: Icon(productProvider.isFavorite ? Icons.favorite : Icons.favorite_border),
               color: Theme.of(context).colorScheme.secondary,
               onPressed: () {
                 productProvider.toggleFavoriteStatus();
               },
+              icon: Icon(productProvider.isFavorite ? Icons.favorite : Icons.favorite_border),
             ),
             title: Text(
               product.title,

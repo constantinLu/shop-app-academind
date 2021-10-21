@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
 
 class Product with ChangeNotifier {
   final String id;
@@ -16,8 +19,28 @@ class Product with ChangeNotifier {
       @required this.imageUrl,
       this.isFavorite = false});
 
-  void toggleFavoriteStatus() {
+  void toggleFavoriteStatus() async {
+    final oldStatus = isFavorite;
     isFavorite = !isFavorite;
+    notifyListeners();
+    try {
+      final url = Uri.parse(
+          'https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json'); //only for firebase
+      final response = await http.patch(url,
+          body: jsonEncode(
+            {'isFavorite': isFavorite},
+          ));
+
+      if (response.statusCode >= 400) {
+        _revertFavorite(oldStatus);
+      }
+    } catch (error) {
+      _revertFavorite(oldStatus);
+    }
+  }
+
+  void _revertFavorite(bool oldStatus) {
+    isFavorite = oldStatus;
     notifyListeners();
   }
 }

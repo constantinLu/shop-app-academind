@@ -6,11 +6,11 @@ import 'package:provider/provider.dart';
 class ProductsGrid extends StatelessWidget {
   final bool showFavorites;
 
-  const ProductsGrid(@required this.showFavorites);
+  const ProductsGrid(this.showFavorites);
 
   @override
   Widget build(BuildContext context) {
-    //setup a connection wich has a parent that adds a provider. (MainClass is the provider).
+    //setup a connection which has a parent that adds a provider. (MainClass is the provider).
     final productsProvider = Provider.of<Products>(context, listen: true);
     final products = showFavorites ? productsProvider.favoriteItems : productsProvider.items;
     //needs to be updated.
