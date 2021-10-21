@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 // SEE 258 video
 // IF THE WIDGET NEEDS TO BE REBUILT AGAIN you need to change it back to stateful
 class OrdersScreen extends StatelessWidget {
-
   static const ROUTE_NAME = "/orders";
 
   // 3rd example ! is to changing it back to a Stateless
