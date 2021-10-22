@@ -12,12 +12,13 @@ class UserProductsScreen extends StatelessWidget {
 
   //named function
   Future<void> _refreshProducts(BuildContext context) async {
-    await Provider.of<Products>(context, listen: false).getProducts();
+    await Provider.of<Products>(context, listen: false).getProducts(true);
+    print('Rebuilding....');
   }
 
   @override
   Widget build(BuildContext context) {
-    final productsProvider = Provider.of<Products>(context);
+    //final productsProvider = Provider.of<Products>(context); - no longer needed because of the Consumer bellow.
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your products'),
@@ -30,29 +31,30 @@ class UserProductsScreen extends StatelessWidget {
           )
         ],
       ),
-      body: RefreshIndicator(
-          onRefresh: () => _refreshProducts(context),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ListView.builder(
-          itemBuilder: (_, i) =>
-              Column(
-                children: [
-                  UserProductItem(
-                      productsProvider.items[i].id, productsProvider.items[i].title,
-                      productsProvider.items[i].imageUrl),
-                  Divider(),
-                ],
+      body: FutureBuilder(
+        future: _refreshProducts(context),
+        builder: (ctx, snapshot) => (snapshot.connectionState == ConnectionState.waiting)
+            ? Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: () => _refreshProducts(context),
+                child: Consumer<Products>(
+                  builder: (ctx, productsProvider, _) => Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: ListView.builder(
+                      itemBuilder: (_, i) => Column(
+                        children: [
+                          UserProductItem(productsProvider.items[i].id, productsProvider.items[i].title,
+                              productsProvider.items[i].imageUrl),
+                          Divider(),
+                        ],
+                      ),
+                      itemCount: productsProvider.items.length,
+                    ),
+                  ),
+                ),
               ),
-          itemCount: productsProvider.items.length,
-        ),
       ),
-    ),drawer
-    :
-    AppDrawer
-    (
-    )
-    ,
+      drawer: AppDrawer(),
     );
   }
 }

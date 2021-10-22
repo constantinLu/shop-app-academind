@@ -6,52 +6,26 @@ import 'package:flutter_complete_guide/providers/product.dart';
 import 'package:http/http.dart' as http;
 
 class Products with ChangeNotifier {
+  final String token;
+  final String userId;
   List<Product> _items = [];
 
-  // Product(
-  //     id: 'p1',
-  //     title: 'Red Shirt',
-  //     description: 'A red shirt - it is pretty red!',
-  //     price: 29.99,
-  //     imageUrl: 'https://cdn.pixabay.com/photo/2016/10/02/22/17/red-t-shirt-1710578_1280.jpg',
-  //     isFavorite: true),
-  // Product(
-  //   id: 'p2',
-  //   title: 'Trousers',
-  //   description: 'A nice pair of trousers.',
-  //   price: 59.99,
-  //   imageUrl:
-  //       'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Trousers%2C_dress_%28AM_1960.022-8%29.jpg/512px-Trousers%2C_dress_%28AM_1960.022-8%29.jpg',
-  // ),
-  // Product(
-  //   id: 'p3',
-  //   title: 'Yellow Scarf',
-  //   description: 'Warm and cozy - exactly what you need for the winter.',
-  //   price: 19.99,
-  //   imageUrl: 'https://live.staticflickr.com/4043/4438260868_cc79b3369d_z.jpg',
-  // ),
-  // Product(
-  //   id: 'p4',
-  //   title: 'A Pan',
-  //   description: 'Prepare any meal you want.',
-  //   price: 49.99,
-  //   imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
-  // ),
-  //];
+  Products(this.token, this.userId, this._items);
 
   List<Product> get items {
     return [..._items];
-    //getting a copy with spread operator.
+    //getting a copy with spread operator.~
   }
 
   List<Product> get favoriteItems {
     return _items.where((product) => product.isFavorite).toList();
     //getting a copy with spread operator.
   }
-
-  Future<void> getProducts() async {
+// ([bool filterByUser = false]) = means that between the [] is an optional positional argument.
+  Future<void> getProducts([bool filterByUser = false]) async {
+    final filter = filterByUser ? 'orderBy="creatorId"&equalTo="$userId"' : '';
     final url = Uri.parse(
-        'https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/products.json'); //only for firebase
+        'https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=$token&$filter'); //only for firebase
     try {
       final response = await http.get(url);
       //print(json.decode(response.body)); // map in another map;
@@ -61,6 +35,10 @@ class Products with ChangeNotifier {
       if (extractedData == null || extractedData.isEmpty) {
         _items;
       }
+      final favoritesUrl = Uri.parse(
+          'https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/userFavorites/$userId.json?auth=$token'); //only for firebase
+      final favoriteResponse = await http.get(favoritesUrl);
+      final favoriteData = json.decode(favoriteResponse.body);
       extractedData.forEach((prodId, prodData) {
         final product = Product(
             id: prodId,
@@ -68,7 +46,9 @@ class Products with ChangeNotifier {
             description: prodData['description'],
             price: prodData['price'] as double,
             imageUrl: prodData['imageUrl'],
-            isFavorite: prodData['isFavorite']);
+            isFavorite: favoriteData == null
+                ? false
+                : favoriteData[prodId] ?? false); //favoriteData[prodId] ?? false if is null return false
         loadedProducts.add(product);
       });
       //_items.addAll(loadedProducts);
@@ -81,7 +61,7 @@ class Products with ChangeNotifier {
   Future<void> addProduct(Product product) async {
     //async automatically returns a future.
     final url = Uri.parse(
-        'https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/products.json'); //only for firebase
+        'https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=$token'); //only for firebase
     try {
       final response = await http.post(
         url,
@@ -90,7 +70,7 @@ class Products with ChangeNotifier {
           'description': product.description,
           'imageUrl': product.imageUrl,
           'price': product.price,
-          'isFavorite': product.isFavorite,
+          'creatorId': userId
         }),
       );
       _items.add(Product(
@@ -138,7 +118,7 @@ class Products with ChangeNotifier {
     final prodIndex = _items.indexWhere((prod) => prod.id == productId);
     //async automatically returns a future.
     final url = Uri.parse(
-        'https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/products/$productId.json'); //only for firebase
+        'https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/products/$productId.json?auth=$token'); //only for firebase
     try {
       if (prodIndex >= 0) {
         await http.patch(url,
@@ -213,7 +193,7 @@ class Products with ChangeNotifier {
   Future<void> deleteProductOptimistic(String productId) async {
     //async automatically returns a future.
     final url = Uri.parse(
-        'https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/products/${productId}.json'); //only for firebase
+        'https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/products/${productId}.json?auth=$token'); //only for firebase
     final existingProductsIndex = _items.indexWhere((product) => product.id == productId);
     var existingProduct = _items[existingProductsIndex];
 

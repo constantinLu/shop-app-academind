@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_complete_guide/models/http_exception.dart';
 import 'package:flutter_complete_guide/providers/auth.dart';
 import 'package:provider/provider.dart';
 
@@ -42,14 +43,12 @@ class AuthScreen extends StatelessWidget {
                   Flexible(
                     child: Container(
                       margin: EdgeInsets.only(bottom: 20.0),
-                      padding:
-                          EdgeInsets.symmetric(vertical: 8.0, horizontal: 94.0),
-                      transform: Matrix4.rotationZ(-8 * pi / 180)
-                        ..translate(-10.0),
+                      padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 94.0),
+                      transform: Matrix4.rotationZ(-8 * pi / 180)..translate(-10.0),
                       // .translate(-10.0) = this returns void that why we need ..translate to return return the Matrix4
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
-                        color: Color.fromRGBO(188, 170, 164, 0.5),
+                        color: Colors.black,
                         boxShadow: [
                           BoxShadow(
                             blurRadius: 8,
@@ -58,14 +57,15 @@ class AuthScreen extends StatelessWidget {
                           )
                         ],
                       ),
-                      child: Text(
-                        'Iarmaroc',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.secondary,
-                          fontSize: 40,
-                          fontFamily: 'Anton',
-                          fontWeight: FontWeight.normal,
-                        ),
+                      child: Image.asset('assets/images/iarmaroc.jpg'
+    // Image(image: AssetImage('assets/images/iarmaroc.jpg'),
+                        // 'Iarmaroc',
+                        // style: TextStyle(
+                        //   color: Theme.of(context).colorScheme.secondary,
+                        //   fontSize: 40,
+                        //   fontFamily: 'Anton',
+                        //   fontWeight: FontWeight.normal,
+                        // ),
                       ),
                     ),
                   ),
@@ -102,6 +102,22 @@ class _AuthCardState extends State<AuthCard> {
   var _isLoading = false;
   final _passwordController = TextEditingController();
 
+  void _showErrorDialog(String message) {
+    showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+              title: Text('An error occurred!'),
+              content: Text(message),
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                    },
+                    child: Text('OK'))
+              ],
+            ));
+  }
+
   void _submit() async {
     if (!_formKey.currentState.validate()) {
       // Invalid!
@@ -111,11 +127,31 @@ class _AuthCardState extends State<AuthCard> {
     setState(() {
       _isLoading = true;
     });
-    if (_authMode == AuthMode.Login) {
-      // Log user in
-    } else {
-      await Provider.of<Auth>(context, listen: false).signup(_authData['email'], _authData['password']);
-      // Sign user up
+    final authProvider = Provider.of<Auth>(context, listen: false);
+    try {
+      if (_authMode == AuthMode.Login) {
+        // Log user in
+        await authProvider.login(
+          _authData['email'],
+          _authData['password'],
+        );
+      } else {
+        await authProvider.signup(_authData['email'], _authData['password']);
+        // Sign user up
+      }
+    } on HttpException catch (error) {
+      var errorMessage = 'FIREBASE DOWN';
+      if (error.toString().contains('EMAIL_EXISTS')) {
+        errorMessage = 'This email address is already in use.';
+      } else if (error.toString().contains('INVALID_EMAIL')) {
+        errorMessage = 'This is not a valid email';
+      } else if (error.toString().contains('EMAIL_NOT_FOUND')) {
+        errorMessage = 'Could not fina a user with that email.';
+      }
+      _showErrorDialog(errorMessage);
+    } catch (error) {
+      const errorMessage = 'Could not authenticate. Please try again later.';
+      _showErrorDialog(errorMessage);
     }
     setState(() {
       _isLoading = false;
@@ -144,8 +180,7 @@ class _AuthCardState extends State<AuthCard> {
       elevation: 8.0,
       child: Container(
         height: _authMode == AuthMode.Signup ? 320 : 260,
-        constraints:
-            BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
+        constraints: BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
         width: deviceSize.width * 0.75,
         padding: EdgeInsets.all(16.0),
         child: Form(
@@ -201,20 +236,17 @@ class _AuthCardState extends State<AuthCard> {
                   CircularProgressIndicator()
                 else
                   RaisedButton(
-                    child:
-                        Text(_authMode == AuthMode.Login ? 'LOGIN' : 'SIGN UP'),
+                    child: Text(_authMode == AuthMode.Login ? 'LOGIN' : 'SIGN UP'),
                     onPressed: _submit,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 30.0, vertical: 8.0),
+                    padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 8.0),
                     color: Theme.of(context).primaryColor,
                     textColor: Theme.of(context).primaryTextTheme.button.color,
                   ),
                 FlatButton(
-                  child: Text(
-                      '${_authMode == AuthMode.Login ? 'SIGNUP' : 'LOGIN'} INSTEAD'),
+                  child: Text('${_authMode == AuthMode.Login ? 'SIGNUP' : 'LOGIN'} INSTEAD'),
                   onPressed: _switchAuthMode,
                   padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 4),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

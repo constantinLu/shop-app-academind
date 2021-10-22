@@ -15,14 +15,20 @@ class OrderItem {
 }
 
 class Orders with ChangeNotifier {
+  final String token;
+  final String userId;
+
   List<OrderItem> _orders = [];
+
+  Orders(this.token, this.userId, this._orders);
+
 
   List<OrderItem> get orders {
     return [..._orders];
   }
 
   Future<void> addOrder(List<CartItem> cartProducts, double total) async {
-    final url = Uri.parse('https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/orders.json');
+    final url = Uri.parse('https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/orders/$userId.json?auth=$token}');
     final dateTime = DateTime.now();
     final response = await http.post(
       url,
@@ -48,7 +54,7 @@ class Orders with ChangeNotifier {
   }
 
   Future<void> getOrders() async {
-    final url = Uri.parse('https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/orders.json');
+    final url = Uri.parse('https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/orders$userId.json?auth=$token');
     final response = await http.get(url);
     print(json.decode(response.body));
 

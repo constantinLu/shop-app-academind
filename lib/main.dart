@@ -7,6 +7,7 @@ import 'package:flutter_complete_guide/screens/auth_screen.dart';
 import 'package:flutter_complete_guide/screens/cart_screen.dart';
 import 'package:flutter_complete_guide/screens/edit_product_screen.dart';
 import 'package:flutter_complete_guide/screens/orders_screen.dart';
+import 'package:flutter_complete_guide/screens/products_overview_screen.dart';
 import 'package:flutter_complete_guide/screens/user_products_screen.dart';
 import 'package:flutter_complete_guide/widgets/product_detail_screen.dart';
 import 'package:provider/provider.dart';
@@ -21,29 +22,39 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider.value(
           value: Auth(),
         ),
-        ChangeNotifierProvider.value(
-          value: Products(),
+        ChangeNotifierProxyProvider<Auth, Products>(
+          create: (ctx) => Products('a', 'a', []),
+          update: (ctx, auth, prevProducts) =>
+              Products(auth.token, auth.userId, prevProducts == null ? [] : prevProducts.items),
         ),
+//
+
         ChangeNotifierProvider.value(
           value: Cart(),
         ),
-        ChangeNotifierProvider.value(
-          value: Orders(),
-        )
+
+        ChangeNotifierProxyProvider<Auth, Orders>(
+            create: (ctx) => Orders('', '', []),
+            update: (ctx, auth, prevOrders) => Orders(auth.token, auth.userId,  prevOrders == null ? [] : prevOrders.orders)),
+        // ChangeNotifierProvider.value(
+        //   value: Orders(),
+        // )
       ],
-      child: MaterialApp(
-        title: 'Iarma',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(primarySwatch: Colors.lightGreen, accentColor: Colors.white, fontFamily: 'Lato'),
-        //textTheme: TextTheme(headline7: TextStyle(fontSize: 5), bodyText1: TextStyle(fontSize: 22), bodyText2: TextStyle(fontSize: 500))),
-        home: AuthScreen(),
-        routes: {
-          ProductDetailScreen.ROUTE_NAME: (ctx) => ProductDetailScreen(),
-          CartScreen.ROUTE_NAME: (ctx) => CartScreen(),
-          OrdersScreen.ROUTE_NAME: (ctx) => OrdersScreen(),
-          UserProductsScreen.ROUTE_NAME: (ctx) => UserProductsScreen(),
-          EditProductScreen.ROUTE_NAME: (ctx) => EditProductScreen()
-        },
+      child: Consumer<Auth>(
+        builder: (ctx, authData, _) => MaterialApp(
+          title: 'Iarma',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(primarySwatch: Colors.lightGreen, accentColor: Colors.white, fontFamily: 'Lato'),
+          //textTheme: TextTheme(headline7: TextStyle(fontSize: 5), bodyText1: TextStyle(fontSize: 22), bodyText2: TextStyle(fontSize: 500))),
+          home: authData.isAuth ? ProductsOverviewScreen() : AuthScreen(),
+          routes: {
+            ProductDetailScreen.ROUTE_NAME: (ctx) => ProductDetailScreen(),
+            CartScreen.ROUTE_NAME: (ctx) => CartScreen(),
+            OrdersScreen.ROUTE_NAME: (ctx) => OrdersScreen(),
+            UserProductsScreen.ROUTE_NAME: (ctx) => UserProductsScreen(),
+            EditProductScreen.ROUTE_NAME: (ctx) => EditProductScreen()
+          },
+        ),
       ),
     );
   }

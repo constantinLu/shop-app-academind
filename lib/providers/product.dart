@@ -19,17 +19,14 @@ class Product with ChangeNotifier {
       @required this.imageUrl,
       this.isFavorite = false});
 
-  void toggleFavoriteStatus() async {
+  void toggleFavoriteStatus(String token, String userId) async {
     final oldStatus = isFavorite;
     isFavorite = !isFavorite;
     notifyListeners();
     try {
       final url = Uri.parse(
-          'https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json'); //only for firebase
-      final response = await http.patch(url,
-          body: jsonEncode(
-            {'isFavorite': isFavorite},
-          ));
+          'https://iarmaroc-68817-default-rtdb.europe-west1.firebasedatabase.app/userFavorites/$userId/$id.json?auth=$token'); //only for firebase
+      final response = await http.put(url, body: jsonEncode(isFavorite));
 
       if (response.statusCode >= 400) {
         _revertFavorite(oldStatus);

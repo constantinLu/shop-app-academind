@@ -12,7 +12,6 @@ class UserProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final providerData = Provider.of<Products>(context);
     return ListTile(
       title: Text(title),
       leading: CircleAvatar(
