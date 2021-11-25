@@ -44,7 +44,7 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               //if error in console use:
              // Navigator.of(context).pop()
-              Navigator.of(context).pushReplacementNamed("/"); // makes to rerun auth
+              //Navigator.of(context).pushReplacementNamed("/"); // makes to rerun auth
               Provider.of<Auth>(context, listen: false).logout();
             },
           ),
