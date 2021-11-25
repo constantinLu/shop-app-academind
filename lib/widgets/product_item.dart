@@ -17,9 +17,19 @@ class ProductItem extends StatelessWidget {
         child: GridTile(
           child: GestureDetector(
             onTap: () {
-              Navigator.of(context).pushNamed(ProductDetailScreen.ROUTE_NAME, arguments: product.id);
+              Navigator.of(context).pushNamed(ProductDetailScreen.ROUTE_NAME,
+                  arguments: product.id);
             },
-            child: Image.network(product.imageUrl, fit: BoxFit.cover),
+            //fades in your image and adds a placeholder
+            child: Hero(
+              //tag used on the new screen
+              tag: productProvider.id,
+              child: FadeInImage(
+                  placeholder:
+                      AssetImage('assets/images/product-placeholder.png'),
+                  image: NetworkImage(product.imageUrl),
+                  fit: BoxFit.cover),
+            ),
           ),
           footer: GridTileBar(
             backgroundColor: Colors.black87,
@@ -27,9 +37,12 @@ class ProductItem extends StatelessWidget {
               color: Theme.of(context).colorScheme.secondary,
               onPressed: () {
                 final authData = Provider.of<Auth>(context, listen: false);
-                productProvider.toggleFavoriteStatus(authData.token, authData.userId);
+                productProvider.toggleFavoriteStatus(
+                    authData.token, authData.userId);
               },
-              icon: Icon(productProvider.isFavorite ? Icons.favorite : Icons.favorite_border),
+              icon: Icon(productProvider.isFavorite
+                  ? Icons.favorite
+                  : Icons.favorite_border),
             ),
             title: Text(
               product.title,
