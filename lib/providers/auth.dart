@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_complete_guide/models/http_exception.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Auth with ChangeNotifier {
   String _token;
@@ -12,7 +13,9 @@ class Auth with ChangeNotifier {
   Timer _authTimer;
 
   bool get isAuth {
-    return (_token != null && _expiryDate != null && _expiryDate.isAfter(DateTime.now()));
+    return (_token != null &&
+        _expiryDate != null &&
+        _expiryDate.isAfter(DateTime.now()));
   }
 
   get userId {
@@ -23,7 +26,8 @@ class Auth with ChangeNotifier {
     return _token;
   }
 
-  Future<void> _authenticate(String email, String password, String urlSegment) async {
+  Future<void> _authenticate(
+      String email, String password, String urlSegment) async {
     final url = Uri.parse(
         'https://identitytoolkit.googleapis.com/v1/accounts:$urlSegment?key=AIzaSyBxsmmQPGeGhq4aoPkikeI4tlb4YWmwDL8');
     try {
@@ -46,12 +50,48 @@ class Auth with ChangeNotifier {
       //store the token
       _token = responseData['idToken'];
       _userId = responseData['localId'];
-      _expiryDate = DateTime.now().add(Duration(seconds: int.parse(responseData['expiresIn'])));
+      _expiryDate = DateTime.now()
+          .add(Duration(seconds: int.parse(responseData['expiresIn'])));
       _autoLogout();
       notifyListeners();
+      //need to work with Futures
+      final prefs = await SharedPreferences
+          .getInstance(); // returns A future which returns a shared preferences
+      //json encode({''}) - can always be used if complex type is needed
+      final userData = json.encode({
+        'token': _token,
+        'userId': _userId,
+        'expiryDate': _expiryDate.toIso8601String()
+      });
+      prefs.setString('userData',
+          userData); //store the string in the prefs to retrive it later
     } catch (error) {
       throw error;
     }
+  }
+
+
+  // store data in the phone prefs
+  Future<bool> tryAutoLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!prefs.containsKey('userData')) {
+      return false;
+    }
+    final extractedUserData =
+        jsonDecode(prefs.getString('userData')) as Map<String, Object>;
+    //extract the expiry date an check it if it still valid.
+
+    final expiryDate = DateTime.parse(extractedUserData['expiryDate']);
+    if (expiryDate.isBefore(DateTime.now())) {
+      return false;
+    }
+    //update the auth values
+    _token = extractedUserData['token'];
+    _userId = extractedUserData['userId'];
+    _expiryDate = expiryDate;
+    notifyListeners();
+    _autoLogout();
+    return true;
   }
 
   Future<void> signup(String email, String password) async {
@@ -62,7 +102,7 @@ class Auth with ChangeNotifier {
     return _authenticate(email, password, 'signInWithPassword');
   }
 
-  void logout() {
+  void logout() async {
     _token == null;
     _expiryDate = null;
     _expiryDate == null;
@@ -71,6 +111,9 @@ class Auth with ChangeNotifier {
       _authTimer == null;
     };
     notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    //prefs.remove('userData'); - only removes this key.
+    prefs.clear();
   }
 
   void _autoLogout() {

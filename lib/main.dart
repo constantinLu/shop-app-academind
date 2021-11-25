@@ -6,6 +6,7 @@ import 'package:flutter_complete_guide/providers/products.dart';
 import 'package:flutter_complete_guide/screens/auth_screen.dart';
 import 'package:flutter_complete_guide/screens/cart_screen.dart';
 import 'package:flutter_complete_guide/screens/edit_product_screen.dart';
+import 'package:flutter_complete_guide/screens/loading_screen.dart';
 import 'package:flutter_complete_guide/screens/orders_screen.dart';
 import 'package:flutter_complete_guide/screens/products_overview_screen.dart';
 import 'package:flutter_complete_guide/screens/user_products_screen.dart';
@@ -24,8 +25,8 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProxyProvider<Auth, Products>(
           create: (ctx) => Products('a', 'a', []),
-          update: (ctx, auth, prevProducts) =>
-              Products(auth.token, auth.userId, prevProducts == null ? [] : prevProducts.items),
+          update: (ctx, auth, prevProducts) => Products(auth.token, auth.userId,
+              prevProducts == null ? [] : prevProducts.items),
         ),
 //
 
@@ -35,7 +36,8 @@ class MyApp extends StatelessWidget {
 
         ChangeNotifierProxyProvider<Auth, Orders>(
             create: (ctx) => Orders('', '', []),
-            update: (ctx, auth, prevOrders) => Orders(auth.token, auth.userId,  prevOrders == null ? [] : prevOrders.orders)),
+            update: (ctx, auth, prevOrders) => Orders(auth.token, auth.userId,
+                prevOrders == null ? [] : prevOrders.orders)),
         // ChangeNotifierProvider.value(
         //   value: Orders(),
         // )
@@ -44,9 +46,22 @@ class MyApp extends StatelessWidget {
         builder: (ctx, authData, _) => MaterialApp(
           title: 'Iarma',
           debugShowCheckedModeBanner: false,
-          theme: ThemeData(primarySwatch: Colors.lightGreen, accentColor: Colors.white, fontFamily: 'Lato'),
+          theme: ThemeData(
+              primarySwatch: Colors.lightGreen,
+              accentColor: Colors.white,
+              fontFamily: 'Lato'),
           //textTheme: TextTheme(headline7: TextStyle(fontSize: 5), bodyText1: TextStyle(fontSize: 22), bodyText2: TextStyle(fontSize: 500))),
-          home: authData.isAuth ? ProductsOverviewScreen() : AuthScreen(),
+          home: authData.isAuth
+              ? ProductsOverviewScreen()
+              : FutureBuilder(
+                  future: authData.tryAutoLogin(),
+                  builder: (context, authResultSnapshot) =>
+                      // see 277 video
+                      authResultSnapshot.connectionState ==
+                              ConnectionState.waiting
+                          ? LoadingScreen()
+                          : AuthScreen(),
+                ),
           routes: {
             ProductDetailScreen.ROUTE_NAME: (ctx) => ProductDetailScreen(),
             CartScreen.ROUTE_NAME: (ctx) => CartScreen(),
