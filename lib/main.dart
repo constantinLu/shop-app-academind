@@ -10,6 +10,7 @@ import 'package:flutter_complete_guide/screens/loading_screen.dart';
 import 'package:flutter_complete_guide/screens/orders_screen.dart';
 import 'package:flutter_complete_guide/screens/products_overview_screen.dart';
 import 'package:flutter_complete_guide/screens/user_products_screen.dart';
+import 'package:flutter_complete_guide/util/custom_route.dart';
 import 'package:flutter_complete_guide/widgets/product_detail_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -28,7 +29,7 @@ class MyApp extends StatelessWidget {
           update: (ctx, auth, prevProducts) => Products(auth.token, auth.userId,
               prevProducts == null ? [] : prevProducts.items),
         ),
-//
+
 
         ChangeNotifierProvider.value(
           value: Cart(),
@@ -49,6 +50,11 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
               primarySwatch: Colors.lightGreen,
               accentColor: Colors.white,
+              //add transiction between pages globally
+              pageTransitionsTheme: PageTransitionsTheme(builders: {
+                TargetPlatform.android: CustomPageTransitionBuilder(),
+                TargetPlatform.iOS: CustomPageTransitionBuilder(),
+              }),
               fontFamily: 'Lato'),
           //textTheme: TextTheme(headline7: TextStyle(fontSize: 5), bodyText1: TextStyle(fontSize: 22), bodyText2: TextStyle(fontSize: 500))),
           home: authData.isAuth

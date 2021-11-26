@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_complete_guide/providers/auth.dart';
-import 'package:flutter_complete_guide/screens/auth_screen.dart';
 import 'package:flutter_complete_guide/screens/orders_screen.dart';
 import 'package:flutter_complete_guide/screens/user_products_screen.dart';
+import 'package:flutter_complete_guide/util/custom_route.dart';
 import 'package:provider/provider.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -28,7 +28,10 @@ class AppDrawer extends StatelessWidget {
             leading: Icon(Icons.payment),
             title: Text('Orders'),
             onTap: () {
-              Navigator.of(context).pushReplacementNamed(OrdersScreen.ROUTE_NAME);
+              // Navigator.of(context).pushReplacementNamed(OrdersScreen.ROUTE_NAME);
+              Navigator.of(context).pushReplacement(CustomRoute(
+                builder: (ctx) => OrdersScreen(),
+              ));
             },
           ),
           Divider(),
@@ -36,7 +39,8 @@ class AppDrawer extends StatelessWidget {
             leading: Icon(Icons.add_shopping_cart),
             title: Text('Manage Products'),
             onTap: () {
-              Navigator.of(context).pushReplacementNamed(UserProductsScreen.ROUTE_NAME);
+              Navigator.of(context)
+                  .pushReplacementNamed(UserProductsScreen.ROUTE_NAME);
             },
           ),
           ListTile(
@@ -44,7 +48,7 @@ class AppDrawer extends StatelessWidget {
             title: Text('Logout'),
             onTap: () {
               //if error in console use:
-             // Navigator.of(context).pop()
+              // Navigator.of(context).pop()
               Provider.of<Auth>(context, listen: false).logout();
             },
           ),
